@@ -8,6 +8,8 @@ public class EnemyAI : MonoBehaviour
     public int moveSpeed;
 	private float rayDistanceForWall = 1f;
 	private float rayDistanceForGround = 40f;
+    float time = 0.3f;
+
 
     private bool movingRight = true;
 	bool canRun = false;
@@ -43,7 +45,9 @@ public class EnemyAI : MonoBehaviour
 		CheckforDie();
     }
 
-	private void OnBecameVisible()
+    #region CameraVisible Properties
+    //if always walk is turned off and when its visible it can run
+    private void OnBecameVisible()
 	{
 		if (!alwaysWalk)
 		{
@@ -51,6 +55,7 @@ public class EnemyAI : MonoBehaviour
 		}
 	}
 
+    //if always walk is turned off and when its not visible then it cant run
 	private void OnBecameInvisible()
 	{
 		if (!alwaysWalk)
@@ -58,15 +63,18 @@ public class EnemyAI : MonoBehaviour
 			canRun = false;
 		}
 	}
+    #endregion
 
-	private void Run()
+    private void Run()
     {
-		//Eğer koşabiliyorsa
-		if (canRun || alwaysWalk)
+        time -= Time.deltaTime;
+
+        //Eğer koşabiliyorsa
+        if (canRun || alwaysWalk)
 		{
 			//Eğer düşman duvar görüyorsa
-			RaycastHit2D hitInfoforWall = Physics2D.Raycast(frontController.position, Vector2.left, rayDistanceForWall, ObstacleLayer);
-			RaycastHit2D hitInfoforGround = Physics2D.Raycast(groundController.position, Vector2.down, rayDistanceForGround, groundLayer);
+			RaycastHit2D hitInfoForWall = Physics2D.Raycast(frontController.position, Vector2.left, rayDistanceForWall, ObstacleLayer);
+			RaycastHit2D hitInfoForGround = Physics2D.Raycast(groundController.position, Vector2.down, rayDistanceForGround, groundLayer);
 
 			//debugging
 			Debug.DrawRay(frontController.position, Vector2.left * rayDistanceForWall, Color.red);
@@ -75,20 +83,26 @@ public class EnemyAI : MonoBehaviour
 
 
 			//Eğer yere düşeceğini fark ederse dönsün
-			if (!hitInfoforGround)
+			if (!hitInfoForGround)
 			{
 				rayDistanceForGround = 50f;
 				movingRight = !movingRight;
 			}
 
+            if (hitInfoForWall)
+            {
+                time = 0.3f;
+            }
 
-			//Eğer önünde engel varsa ve yerdeyse tırmansın
-			if (hitInfoforWall && hitInfoforGround)
+            //Eğer önünde engel varsa ve yerdeyse tırmansın
+            if ((time > 0) && hitInfoForGround)
 			{
-				//Tırmanma
-				rb2d.velocity = new Vector2(rb2d.velocity.x, moveSpeed);
+               
+                //Tırmanma
+                rb2d.velocity = new Vector2(rb2d.velocity.x, moveSpeed);
 				rayDistanceForGround = 40f;
-			}
+
+            }
 
 
 
